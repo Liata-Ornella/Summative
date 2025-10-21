@@ -1,0 +1,14 @@
+[
+  {"id":"task_001","title":"Submit lab report","dueDate":"2025-10-25","duration":90,"tag":"Academic","createdAt":"2025-10-12T14:25:00Z","updatedAt":"2025-10-12T14:25:00Z"},
+  {"id":"task_002","title":"Study calculus","dueDate":"2025-10-16","duration":120,"tag":"Academic","createdAt":"2025-10-12T14:26:00Z","updatedAt":"2025-10-12T14:26:00Z"},
+  {"id":"task_003","title":"Club meeting","dueDate":"2025-10-18","duration":60,"tag":"Club","createdAt":"2025-10-12T14:27:00Z","updatedAt":"2025-10-12T14:27:00Z"},
+  {"id":"task_004","title":"Gym session","dueDate":"2025-10-15","duration":45,"tag":"Health","createdAt":"2025-10-12T14:28:00Z","updatedAt":"2025-10-12T14:28:00Z"},
+  {"id":"task_005","title":"Group project sync","dueDate":"2025-10-17","duration":75,"tag":"Academic","createdAt":"2025-10-12T14:29:00Z","updatedAt":"2025-10-12T14:29:00Z"},
+  {"id":"task_006","title":"Part-time shift","dueDate":"2025-10-16","duration":240,"tag":"Errand","createdAt":"2025-10-12T14:30:00Z","updatedAt":"2025-10-12T14:30:00Z"},
+  {"id":"task_007","title":"Call family","dueDate":"2025-10-14","duration":20,"tag":"Social","createdAt":"2025-10-12T14:31:00Z","updatedAt":"2025-10-12T14:31:00Z"},
+  {"id":"task_008","title":"Bake sale prep","dueDate":"2025-10-19","duration":110,"tag":"Club","createdAt":"2025-10-12T14:32:00Z","updatedAt":"2025-10-12T14:32:00Z"},
+  {"id":"task_009","title":"Doctor appointment","dueDate":"2025-10-20","duration":30,"tag":"Health","createdAt":"2025-10-12T14:33:00Z","updatedAt":"2025-10-12T14:33:00Z"},
+  {"id":"task_010","title":"Campus tour","dueDate":"2025-10-22","duration":50,"tag":"Social","createdAt":"2025-10-12T14:34:00Z","updatedAt":"2025-10-12T14:34:00Z"}
+]
+
+

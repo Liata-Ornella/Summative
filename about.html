@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About • Campus Life Planner</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <h1>About</h1>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="about.html" aria-current="page">About</a></li>
+        <li><a href="tasks.html">Tasks</a></li>
+        <li><a href="tests.html">Tests</a></li>
+        <li><a href="settings.html">Settings</a></li>
+        <li><button id="themeToggle" type="button" aria-pressed="false">Toggle Dark Mode</button></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    <section class="hero card fadein" aria-label="About Campus Life Planner">
+      <div class="hero-content">
+        <h2 class="hero-title gradient-text">Plan Smarter. Live Better.</h2>
+        <p class="hero-sub">A sleek planner that helps you prioritize, focus, and get more done without the chaos.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="tasks.html">View Tasks</a>
+          <a class="btn btn-secondary" href="index.html">Back to Dashboard</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true"></div>
+    </section>
+    <article class="card">
+      <h2>Campus Life Planner</h2>
+      <p>Manage tasks, deadlines, durations, and tags for campus life. Built with accessible, semantic HTML, mobile-first CSS, and modular JavaScript.</p>
+      <h3>Contact</h3>
+      <ul>
+        <li><a href="#" rel="me">Project maintainer</a></li>
+        <li><a href="https://youtu.be/mQFrmVsXJ24" target="_blank">Demo video</a></li>
+        <li><a href="#" target="_blank">GitHub repository</a></li>
+      </ul>
+    </article>
+  </main>
+  <footer class="site-footer">
+    <p><a href="index.html">Back to Planner</a></p>
+  </footer>
+  <script type="module" src="./scripts/ui.js"></script>
+</body>
+</html>

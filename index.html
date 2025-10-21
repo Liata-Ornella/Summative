@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Campus Life Planner</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <h1>Dashboard</h1>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li><a href="index.html" aria-current="page">Dashboard</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="tasks.html">Tasks</a></li>
+         <li><a href="tests.html">Tests</a></li>
+         <li><a href="settings.html">Settings</a></li>
+         <li><button id="themeToggle" type="button" aria-pressed="false">Toggle Dark Mode</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section id="feedback" aria-live="polite" class="sr-only" aria-atomic="true"></section>
+    <section class="hero card fadein" aria-label="Welcome">
+      <div class="hero-content">
+        <h2 class="hero-title gradient-text">Own Your Campus Day</h2>
+        <p class="hero-sub">Plan tasks, track time, and smash deadlines with a beautiful, distraction-free dashboard.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="tasks.html">Start Planning</a>
+          <a class="btn btn-secondary" href="settings.html">Set Preferences</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true"></div>
+    </section>
+
+    <section id="dashboard" class="card">
+      <h2>Dashboard</h2>
+      <div class="stats">
+        <div class="stat"><span id="stat-total">0</span><span class="label">Total tasks</span></div>
+        <div class="stat"><span id="stat-duration">0</span><span class="label">Total minutes</span></div>
+        <div class="stat"><span id="stat-tag">—</span><span class="label">Top tag</span></div>
+      </div>
+      <div class="cap">
+        <label for="weeklyCap">Weekly time cap (minutes)</label>
+        <input id="weeklyCap" name="weeklyCap" type="number" min="0" step="1" inputmode="numeric">
+        <output id="capStatus" aria-live="polite">Cap status: not set</output>
+      </div>
+      <div id="trend" class="chart" role="img" aria-label="Tasks by day in past 7 days"></div>
+    </section>
+
+    
+  </main>
+
+  <footer class="site-footer">
+    <p>Campus Life Planner • <a href="about.html">About</a></p>
+  </footer>
+
+  <script type="module" src="./scripts/ui.js"></script>
+  <script type="module">
+    import { saveToStorage } from './scripts/storage.js';
+    import { appState, setWeeklyCapMinutes, getWeeklyCapMinutes, getStats, ensureSeed } from './scripts/state.js';
+    import { renderTrendChart } from './scripts/chart.js';
+
+    const feedback = document.getElementById('feedback');
+    const weeklyCap = document.getElementById('weeklyCap');
+    const capStatus = document.getElementById('capStatus');
+
+    ensureSeed();
+    renderStats();
+    updateCapStatus();
+
+    weeklyCap.addEventListener('input', onCapChange);
+
+    function onCapChange() {
+      const minutes = Number(weeklyCap.value || 0);
+      setWeeklyCapMinutes(minutes);
+      updateCapStatus();
+      saveToStorage(appState);
+    }
+
+    function renderStats() {
+      const { totalCount, totalDuration, mostUsedTag, trend } = getStats();
+      document.getElementById('stat-total').textContent = String(totalCount);
+      document.getElementById('stat-duration').textContent = String(totalDuration);
+      document.getElementById('stat-tag').textContent = mostUsedTag || '—';
+      renderTrendChart(document.getElementById('trend'), trend);
+    }
+
+    function updateCapStatus() {
+      weeklyCap.value = String(getWeeklyCapMinutes() || 0);
+      const { totalDuration } = getStats();
+      const cap = getWeeklyCapMinutes() || 0;
+      if (cap <= 0) {
+        capStatus.setAttribute('aria-live','polite');
+        capStatus.textContent = 'Cap status: not set';
+        return;
+      }
+      const remaining = cap - totalDuration;
+      const over = remaining < 0;
+      capStatus.setAttribute('aria-live', over ? 'assertive' : 'polite');
+      capStatus.textContent = over ? `Over cap by ${Math.abs(remaining)} minutes` : `${remaining} minutes remaining`;
+    }
+
+    function announce(message) {
+      feedback.textContent = message;
+    }
+  </script>
+</body>
+</html>

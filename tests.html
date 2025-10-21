@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tests • Campus Life Planner</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    .test-pass{color:var(--ok)}.test-fail{color:var(--danger)}
+    code{background:rgba(255,255,255,.07);padding:.1rem .25rem;border-radius:.25rem}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <h1>Tests</h1>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="tasks.html">Tasks</a></li>
+        <li><a href="tests.html" aria-current="page">Tests</a></li>
+        <li><a href="settings.html">Settings</a></li>
+        <li><button id="themeToggle" type="button" aria-pressed="false">Toggle Dark Mode</button></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    <section class="card">
+      <h2>Regex Validation</h2>
+      <ul id="testList"></ul>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <p><a href="index.html">Back to Planner</a></p>
+  </footer>
+
+  <script type="module" src="./scripts/ui.js"></script>
+  <script type="module">
+    import { validators } from './scripts/validators.js';
+    const tests = [
+      ['Title valid', validators.title.re.test('Submit lab report') === true],
+      ['Title invalid leading space', validators.title.re.test(' Submit') === false],
+      ['Duplicate word detect', validators.duplicateWord.re.test('read read') === true],
+      ['Due date valid', validators.dueDate.re.test('2025-10-25') === true],
+      ['Due date invalid', validators.dueDate.re.test('2025-13-40') === false],
+      ['Duration valid int', validators.duration.re.test('90') === true],
+      ['Duration valid decimal', validators.duration.re.test('12.34') === true],
+      ['Duration invalid', validators.duration.re.test('-1') === false],
+      ['Tag valid', validators.tag.re.test('Study Group') === true],
+      ['Tag invalid', validators.tag.re.test('123') === false],
+    ];
+    const ul = document.getElementById('testList');
+    for (const [name, pass] of tests) {
+      const li = document.createElement('li');
+      li.className = pass ? 'test-pass' : 'test-fail';
+      li.textContent = (pass ? 'PASS: ' : 'FAIL: ') + name;
+      ul.appendChild(li);
+    }
+  </script>
+</body>
+</html>
+
+
+
+

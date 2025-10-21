@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings • Campus Life Planner</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <h1>Settings</h1>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="tasks.html">Tasks</a></li>
+        <li><a href="tests.html">Tests</a></li>
+        <li><a href="settings.html" aria-current="page">Settings</a></li>
+        <li><button id="themeToggle" type="button" aria-pressed="false">Toggle Dark Mode</button></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    <section class="card">
+      <h2>Display Units</h2>
+      <div class="field">
+        <label for="unitSelect">Units</label>
+        <select id="unitSelect">
+          <option value="minutes">Minutes</option>
+          <option value="hours">Hours</option>
+        </select>
+        <small class="help">Changes display only. Stored data remains in minutes.</small>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Custom Tags</h2>
+      <form id="tagForm">
+        <div class="field">
+          <label for="newTag">New tag</label>
+          <input id="newTag" autocomplete="off">
+          <button type="submit">Add Tag</button>
+        </div>
+      </form>
+      <ul id="tagListSettings" class="tag-list"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Time Conversion</h2>
+      <div class="field">
+        <label for="minutesPerHour">Minutes per hour</label>
+        <input id="minutesPerHour" type="number" min="1" step="1" value="60">
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <p><a href="index.html">Back to Planner</a></p>
+  </footer>
+
+  <script type="module" src="./scripts/ui.js"></script>
+  <script type="module">
+    import { appState, setDisplayUnits, addTag, removeTag, setMinutesPerHour } from './scripts/state.js';
+    import { saveToStorage } from './scripts/storage.js';
+
+    const unitSelect = document.getElementById('unitSelect');
+    const minutesPerHour = document.getElementById('minutesPerHour');
+    const tagForm = document.getElementById('tagForm');
+    const newTag = document.getElementById('newTag');
+    const tagList = document.getElementById('tagListSettings');
+
+    // init
+    unitSelect.value = appState.settings.displayUnits;
+    minutesPerHour.value = String(appState.settings.minutesPerHour);
+    renderTags();
+
+    unitSelect.addEventListener('change', () => {
+      setDisplayUnits(unitSelect.value);
+      saveToStorage(appState);
+    });
+
+    minutesPerHour.addEventListener('input', () => {
+      setMinutesPerHour(Number(minutesPerHour.value || 60));
+      saveToStorage(appState);
+    });
+
+    tagForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const value = newTag.value.trim();
+      if (!value) return;
+      addTag(value);
+      newTag.value = '';
+      saveToStorage(appState);
+      renderTags();
+    });
+
+    function renderTags() {
+      tagList.innerHTML = '';
+      appState.settings.tags.forEach(tag => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${tag}</span> <button data-tag="${tag}">Remove</button>`;
+        tagList.appendChild(li);
+      });
+      tagList.querySelectorAll('button').forEach(btn => btn.addEventListener('click', (e) => {
+        const tag = e.currentTarget.getAttribute('data-tag');
+        removeTag(tag);
+        saveToStorage(appState);
+        renderTags();
+      }));
+    }
+  </script>
+</body>
+</html>
+
+

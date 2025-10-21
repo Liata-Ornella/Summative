@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Tasks • Campus Life Planner</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="preload" href="styles/main.css" as="style">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="site-header">
+    <h1>Tasks</h1>
+    <nav aria-label="Primary">
+      <ul class="nav">
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="tasks.html" aria-current="page">Tasks</a></li>
+        <li><a href="tests.html">Tests</a></li>
+        <li><a href="settings.html">Settings</a></li>
+        <li><button id="themeToggle" type="button" aria-pressed="false">Toggle Dark Mode</button></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section id="feedback" aria-live="polite" class="sr-only" aria-atomic="true"></section>
+
+    <section id="controls" class="card">
+      <h2>Add / Edit Task</h2>
+      <form id="taskForm" novalidate>
+        <input type="hidden" id="taskId">
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" name="title" required autocomplete="off" maxlength="120">
+          <small id="titleHelp" class="help">No leading/trailing spaces. Avoid duplicate words.</small>
+          <div class="error" id="titleError" role="alert" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label for="dueDate">Due Date</label>
+          <input id="dueDate" name="dueDate" type="date" required pattern="\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])">
+          <div class="error" id="dueDateError" role="alert" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label for="duration">Duration (minutes)</label>
+          <input id="duration" name="duration" type="number" min="0" step="1" inputmode="numeric" required>
+          <div class="error" id="durationError" role="alert" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label for="tag">Tag</label>
+          <input id="tag" name="tag" list="tagList" autocomplete="off" required>
+          <datalist id="tagList"></datalist>
+          <div class="error" id="tagError" role="alert" aria-live="polite"></div>
+        </div>
+        <div class="actions">
+          <button type="submit" id="saveBtn">Save</button>
+          <button type="reset" id="resetBtn">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="searchSort" class="card">
+      <h2>Search & Sort</h2>
+      <div class="field">
+        <label for="searchInput">Regex search</label>
+        <input id="searchInput" name="searchInput" placeholder="e.g. ^@tag:Academic | \\b(\\w+)\\s+\\1\\b">
+        <label class="inline"><input type="checkbox" id="searchCaseInsensitive" checked> Case-insensitive</label>
+        <div id="searchError" class="error" aria-live="polite"></div>
+      </div>
+      <div class="field">
+        <label for="sortSelect">Sort by</label>
+        <select id="sortSelect">
+          <option value="title-asc">Title (A–Z)</option>
+          <option value="title-desc">Title (Z–A)</option>
+          <option value="dueDate-asc">Due Date (Soonest)</option>
+          <option value="dueDate-desc">Due Date (Latest)</option>
+          <option value="duration-asc">Duration (Short)</option>
+          <option value="duration-desc">Duration (Long)</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="list" class="card">
+      <h2>Tasks</h2>
+      <div class="responsive-list">
+        <table id="taskTable" class="desktop" aria-describedby="listHelp">
+          <caption class="sr-only">Task list</caption>
+          <thead>
+            <tr>
+              <th scope="col">Title</th>
+              <th scope="col">Due</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Tag</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="taskCards" class="mobile cards" aria-describedby="listHelp"></div>
+      </div>
+      <p id="listHelp" class="help">Table on larger screens; cards on mobile. Keyboard-accessible actions.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Campus Life Planner • <a href="about.html">About</a></p>
+  </footer>
+
+  <script type="module" src="./scripts/ui.js"></script>
+  <script type="module">
+    import { saveToStorage } from './scripts/storage.js';
+    import { appState, createTask, updateTask, deleteTask, getSortedTasks, ensureSeed } from './scripts/state.js';
+    import { validateFormField, highlightMatches } from './scripts/validators.js';
+    import { compileSearch } from './scripts/search.js';
+
+    const form = document.getElementById('taskForm');
+    const feedback = document.getElementById('feedback');
+    const datalist = document.getElementById('tagList');
+    const tableBody = document.querySelector('#taskTable tbody');
+    const cards = document.getElementById('taskCards');
+    const sortSelect = document.getElementById('sortSelect');
+    const searchInput = document.getElementById('searchInput');
+    const searchCi = document.getElementById('searchCaseInsensitive');
+    const searchError = document.getElementById('searchError');
+
+    ensureSeed();
+    renderAll();
+
+    form.addEventListener('input', onFormInput, true);
+    form.addEventListener('submit', onFormSubmit);
+    form.addEventListener('reset', onFormReset);
+    sortSelect.addEventListener('change', renderList);
+    searchInput.addEventListener('input', renderList);
+    searchCi.addEventListener('change', renderList);
+
+    function onFormInput(e) {
+      const target = e.target;
+      validateFormField(target, updateFieldError);
+    }
+
+    function updateFieldError(field, message) {
+      const map = {
+        title: 'titleError',
+        dueDate: 'dueDateError',
+        duration: 'durationError',
+        tag: 'tagError'
+      };
+      const id = map[field.id];
+      if (!id) return;
+      const el = document.getElementById(id);
+      el.textContent = message || '';
+    }
+
+    function onFormSubmit(e) {
+      e.preventDefault();
+      const fields = ['title','dueDate','duration','tag'].map(id => document.getElementById(id));
+      let ok = true;
+      for (const f of fields) {
+        ok = validateFormField(f, updateFieldError) && ok;
+      }
+      if (!ok) {
+        announce('Please fix validation errors');
+        return;
+      }
+      const id = document.getElementById('taskId').value || undefined;
+      const record = {
+        id,
+        title: document.getElementById('title').value.trim(),
+        dueDate: document.getElementById('dueDate').value,
+        duration: Number(document.getElementById('duration').value),
+        tag: document.getElementById('tag').value.trim()
+      };
+      if (id) {
+        updateTask(record);
+        announce('Task updated');
+      } else {
+        createTask(record);
+        announce('Task added');
+      }
+      saveToStorage(appState);
+      form.reset();
+      document.getElementById('taskId').value = '';
+      renderAll();
+    }
+
+    function onFormReset() {
+      document.getElementById('taskId').value = '';
+      const errors = document.querySelectorAll('.error');
+      errors.forEach(e => e.textContent = '');
+    }
+
+    function renderAll() {
+      renderDatalist();
+      renderList();
+    }
+
+    function renderDatalist() {
+      datalist.innerHTML = '';
+      appState.settings.tags.forEach(tag => {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function getSearchFilter() {
+      const pattern = searchInput.value;
+      if (!pattern) return null;
+      try {
+        const flags = searchCi.checked ? 'i' : '';
+        const re = compileSearch(pattern, flags);
+        searchError.textContent = '';
+        return (text) => re.test(text);
+      } catch (err) {
+        searchError.textContent = String(err.message || err);
+        return () => true;
+      }
+    }
+
+    function renderList() {
+      const filter = getSearchFilter();
+      const sort = sortSelect.value;
+      const tasks = getSortedTasks(sort).filter(t => {
+        if (!filter) return true;
+        const hay = `${t.title} ${t.dueDate} ${t.duration} @tag:${t.tag}`;
+        return filter(hay);
+      });
+
+      // Table
+      tableBody.innerHTML = '';
+      for (const t of tasks) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${highlightMatches(t.title, searchInput.value, searchCi.checked)}</td>
+          <td>${t.dueDate}</td>
+          <td>${t.duration}</td>
+          <td>${t.tag}</td>
+          <td>
+            <button data-action="edit" data-id="${t.id}">Edit</button>
+            <button data-action="delete" data-id="${t.id}">Delete</button>
+          </td>`;
+        tableBody.appendChild(tr);
+      }
+      tableBody.querySelectorAll('button').forEach(btn => btn.addEventListener('click', onAction));
+
+      // Cards
+      cards.innerHTML = '';
+      for (const t of tasks) {
+        const card = document.createElement('article');
+        card.className = 'card-item fadein';
+        card.innerHTML = `
+          <h3>${highlightMatches(t.title, searchInput.value, searchCi.checked)}</h3>
+          <p><strong>Due:</strong> ${t.dueDate}</p>
+          <p><strong>Duration:</strong> ${t.duration} min</p>
+          <p><strong>Tag:</strong> ${t.tag}</p>
+          <div class="card-actions">
+            <button data-action="edit" data-id="${t.id}">Edit</button>
+            <button data-action="delete" data-id="${t.id}">Delete</button>
+          </div>`;
+        cards.appendChild(card);
+      }
+      cards.querySelectorAll('button').forEach(btn => btn.addEventListener('click', onAction));
+    }
+
+    function onAction(e) {
+      const id = e.currentTarget.getAttribute('data-id');
+      const action = e.currentTarget.getAttribute('data-action');
+      if (action === 'edit') {
+        const task = appState.tasks.find(t => t.id === id);
+        if (!task) return;
+        document.getElementById('taskId').value = task.id;
+        document.getElementById('title').value = task.title;
+        document.getElementById('dueDate').value = task.dueDate;
+        document.getElementById('duration').value = String(task.duration);
+        document.getElementById('tag').value = task.tag;
+        document.getElementById('title').focus();
+      } else if (action === 'delete') {
+        const task = appState.tasks.find(t => t.id === id);
+        if (!task) return;
+        const ok = confirm(`Delete “${task.title}”?`);
+        if (!ok) return;
+        deleteTask(id);
+        saveToStorage(appState);
+        announce('Task deleted');
+        renderAll();
+      }
+    }
+
+    function announce(message) {
+      feedback.textContent = message;
+    }
+  </script>
+</body>
+</html>
+
